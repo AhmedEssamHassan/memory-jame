@@ -5,76 +5,72 @@ import { useEffect, useState } from "react";
 var _ = require("lodash");
 
 function App() {
-  const [images, setImages] = useState([]);
-  const [keys, setKeys] = useState([]);
-  const [result, setResult] = useState("success");
-  const [similar, setSimilar] = useState([]);
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [clickedItem, setClickedItem] = useState("");
-  useEffect(() => {
-    setImages(_.shuffle(initImages));
-  }, []);
+  const [images, setImages] = useState(_.shuffle(initImages));
+  const [swap, setSwap] = useState({});
 
-  const handleClick = (obj) => {
-    setClickedItem(obj.id);
-    if (obj.id !== clickedItem) {
-      setSelectedItems([...selectedItems, obj]);
-      obj.className = "flip-on-click";
-      const newImages = images.filter((img) => img.id !== obj.id);
-      newImages.splice(obj.index, 0, obj);
-      setImages(newImages);
-      /* **************** */
-      if (keys.length < 2) {
-        setKeys([...keys, obj.key]);
+  const handleClick = (index, obj) => {
+    swap[index] = obj;
+    console.log(swap);
+    images[index] = { ...obj, status: true };
+    setImages([...images]);
+    if (Object.keys(swap).length > 1) {
+      if (swap[Object.keys(swap)[0]].src === swap[Object.keys(swap)[1]].src) {
+        images[Object.keys(swap)[0]] = {
+          ...Object.values(swap)[0],
+          status: true,
+        };
+        images[Object.keys(swap)[1]] = {
+          ...Object.values(swap)[1],
+          status: true,
+        };
+        setSwap({});
+        setImages([...images]);
+
+        if (!images.some((e) => e.status === false)) {
+          setTimeout(() => {
+            alert("finished");
+          }, 800);
+        }
       } else {
-        setKeys([obj.key]);
+        console.log("x");
+        images[Object.keys(swap)[0]] = {
+          ...Object.values(swap)[0],
+          status: false,
+        };
+        images[Object.keys(swap)[1]] = {
+          ...Object.values(swap)[1],
+          status: false,
+        };
+
+        setTimeout(() => {
+          setImages([...images]);
+        }, 700);
+        setSwap({});
       }
     }
   };
 
-  useEffect(() => {
-    if (keys[0] === keys[1]) {
-      const theKey = keys[0];
-      const similaritems = images
-        .filter((item) => item.key === theKey)
-        .map((item) => (item.className = "flip-on-click"));
-      setSimilar([...similar, ...similaritems]);
-      setResult("success");
-      setSelectedItems([]);
-    } else {
-      if (keys.length === 2) {
-        const hiddenImages = selectedItems.map((item) => {
-          return { ...item, className: "" };
-        });
-
-        const firstIndex = hiddenImages[0].index;
-        const secIndex = hiddenImages[1].index;
-
-        const updatedImages = [...images];
-        updatedImages[firstIndex] = {
-          ...updatedImages[firstIndex],
-          className: "xx",
-        };
-        updatedImages[secIndex] = {
-          ...updatedImages[secIndex],
-          className: "xx",
-        };
-        setTimeout(() => {
-          setImages(updatedImages);
-        }, 1000);
-        setKeys([]);
-      }
-      setResult("faild");
-    }
-  }, [keys]);
-
   return (
-    <div className="App d-flex justify-content-center">
+    <div
+      className="App d-flex justify-content-center align-items-center"
+      style={{ border: "1px solid red", minHeight: "100vh" }}
+    >
       <div
         className="d-flex flex-column justify-content-center align-items-center"
         style={{ width: "60%" }}
       >
-        <div>{result}</div>
+        <div
+          style={{
+            border: "1px solid red",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "20%",
+            height: "100%",
+          }}
+        >
+          s
+        </div>
 
         {/* ******************* */}
         <div className="d-flex flex-wrap justify-content-center">
@@ -82,10 +78,10 @@ function App() {
             return (
               <div key={img.id} className={`flip-card ${img.className}`}>
                 <div
-                  className={`flip-card-inner ${img.className}`}
-                  onClick={() => {
-                    handleClick({ ...img, index });
-                  }}
+                  className={`flip-card-inner ${
+                    img.status ? "flip-on-click" : ""
+                  }`}
+                  onClick={() => (img.status ? "" : handleClick(index, img))}
                 >
                   <div className="flip-card-front"></div>
                   <div className="flip-card-back">
@@ -106,18 +102,3 @@ function App() {
 }
 
 export default App;
-
-/* 
- images[obj.index] = { ...obj, className: "flip-on-click" };
-    setImages([...images]);
-
-    setKeys((oldObj) => {
-      if (oldObj?.key === obj?.key) {
-        images[obj.index] = { ...obj, className: "flip-on-click" };
-        images[oldObj.index] = { ...oldObj, className: "flip-on-click" };
-      } else {
-      }
-
-      return obj;
-    });
- */
